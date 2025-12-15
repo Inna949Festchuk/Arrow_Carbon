@@ -1,0 +1,122 @@
+############################################################
+# docker-compose.yml
+#
+# Запускает стек:
+# - web: Django + GeoDjango (наш проект);
+# - db: PostgreSQL + PostGIS (postgis/postgis);
+# - redis: брокер для Celery и кэш;
+# - celery_worker: Celery‑воркер;
+# - celery_beat: планировщик периодических задач.
+#
+# Все сервисы подключены в одну сеть и используют общие
+# переменные окружения для доступа к БД и Redis.
+############################################################
+version: "3.9"
+
+services:
+  web:
+    build: .
+    container_name: arrow_carbon_web
+    command: >
+      sh -c "
+        python manage.py migrate &&
+        python manage.py runserver 0.0.0.0:8000
+      "
+    volumes:
+      - .:/app
+      - media_data:/app/media
+      - static_data:/app/static
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      # Настройки подключения к базе данных (должны совпадать с settings.py)
+      POSTGRES_DB: ${POSTGRES_DB:-pdre_db}
+      POSTGRES_USER: ${POSTGRES_USER:-pdre_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pdre_password}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      CELERY_BROKER_URL: redis://redis:6379/0
+      DJANGO_SETTINGS_MODULE: web_gis_project.settings
+      # Переопределяем пути к GDAL/GEOS внутри контейнера (Debian)
+      GDAL_LIBRARY_PATH: /usr/lib/x86_64-linux-gnu/libgdal.so.32
+      GEOS_LIBRARY_PATH: /usr/lib/x86_64-linux-gnu/libgeos_c.so.1
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: arrow_carbon_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-pdre_db}
+      POSTGRES_USER: ${POSTGRES_USER:-pdre_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pdre_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    container_name: arrow_carbon_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  celery_worker:
+    build: .
+    container_name: arrow_carbon_celery_worker
+    command: >
+      celery -A web_gis_project worker -l info
+    volumes:
+      - .:/app
+      - media_data:/app/media
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-pdre_db}
+      POSTGRES_USER: ${POSTGRES_USER:-pdre_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pdre_password}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      CELERY_BROKER_URL: redis://redis:6379/0
+      DJANGO_SETTINGS_MODULE: web_gis_project.settings
+      GDAL_LIBRARY_PATH: /usr/lib/x86_64-linux-gnu/libgdal.so.32
+      GEOS_LIBRARY_PATH: /usr/lib/x86_64-linux-gnu/libgeos_c.so.1
+    depends_on:
+      - db
+      - redis
+
+  celery_beat:
+    build: .
+    container_name: arrow_carbon_celery_beat
+    command: >
+      celery -A web_gis_project beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    volumes:
+      - .:/app
+      - media_data:/app/media
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-pdre_db}
+      POSTGRES_USER: ${POSTGRES_USER:-pdre_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pdre_password}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      CELERY_BROKER_URL: redis://redis:6379/0
+      DJANGO_SETTINGS_MODULE: web_gis_project.settings
+      GDAL_LIBRARY_PATH: /usr/lib/x86_64-linux-gnu/libgdal.so.32
+      GEOS_LIBRARY_PATH: /usr/lib/x86_64-linux-gnu/libgeos_c.so.1
+    depends_on:
+      - db
+      - redis
+
+volumes:
+  postgres_data:
+  media_data:
+  static_data:
+
+
