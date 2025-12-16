@@ -1,4 +1,4 @@
-## Arrow_Carbon
+# Arrow_Carbon
 Проект по расчету углеродных единиц и ПДРЕ на основе спутниковых снимков и геоданных.
 
 ### Запуск проекта через Docker Compose
@@ -98,29 +98,58 @@ docker compose exec web python manage.py migrate
 ## 6. Устранение неисправностей
 
 
-# 1. Проверьте наличие models.py
+1. Проверьте наличие models.py
+```bash
 docker-compose exec web ls -la pdre_calculation/models.py
+```
 
-# 2. Создайте миграции
+2. Создайте миграции
+```bash
 docker-compose exec web python manage.py makemigrations pdre_calculation
+```
 
-# 3. Примените миграции  
+3. Примените миграции
+```bash  
 docker-compose exec web python manage.py migrate
+```
 
-# 4. Проверьте
+4. Проверьте миграции
+```bash
 docker-compose exec web python manage.py showmigrations pdre_calculation
+```
 
-# Должно показать:
-# pdre_calculation
-# [X] 0001_initial
+### Должно показать:
+```bash
+pdre_calculation
+[X] 0001_initial
+```
 
 -------
 
-# Установить расширениее БД postgis_raster
+5. Установить расширениее БД postgis_raster
 
-# Подключитесь к контейнеру базы данных
+- Подключитесь к контейнеру базы данных
+```bash
 docker-compose exec db psql -U pdre_user -d pdre_db
+```
 
-# В psql выполните:
+- В psql выполните:
+```bash
 CREATE EXTENSION IF NOT EXISTS postgis_raster;
 \q
+```
+
+--------
+
+- Создание суперпользователя
+```bash
+docker-compose exec web python manage.py createsuperuser
+```
+### Должно показать:
+```bash
+Имя пользователя (leave blank to use 'root'): admin
+Email address: 
+Password: admin
+Password (again): admin
+Superuser created successfully.
+```
