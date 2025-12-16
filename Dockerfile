@@ -23,20 +23,38 @@ WORKDIR /app
 # Установка системных зависимостей
 ############################################################
 
+# Установка системных зависимостей для GeoDjango
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \                 # компиляторы и заголовки
-    gdal-bin \                        # утилиты GDAL
-    libgdal-dev \                     # dev‑заголовки GDAL
-    binutils \                        # для линковки гео‑библиотек
-    libproj-dev \                     # библиотека проекций PROJ
-    proj-bin \                        # утилиты PROJ
-    libgeos-dev \                     # GEOS
-    libpq-dev \                       # клиент Postgres
-    gettext \                         # для локализации (опционально)
+    # Компиляторы и заголовки
+    build-essential \
+    # Утилиты GDAL
+    gdal-bin \
+    # Dev-заголовки GDAL
+    libgdal-dev \
+    # Для линковки гео-библиотек
+    binutils \
+    # Библиотека проекций PROJ
+    libproj-dev \
+    # Утилиты PROJ
+    proj-bin \
+    # GEOS
+    libgeos-dev \
+    # Клиент Postgres
+    libpq-dev \
+    # Для локализации
+    gettext \
+    # Для Pillow
+    libjpeg-dev \
+    libfreetype6-dev \
+    liblcms2-dev \
+    libtiff-dev \
+    libwebp-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # В некоторых системах пути к библиотекам GDAL/GEOS отличаются.
-# Для Debian 12 часто используются следующие пути (можете проверить через `ldconfig -p`):
+# Для Debian 12 часто используются следующие пути:
+
+# Пути к библиотекам GDAL/GEOS
 ENV GDAL_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgdal.so.32 \
     GEOS_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgeos_c.so.1
 
@@ -62,13 +80,4 @@ ENV DJANGO_SETTINGS_MODULE=web_gis_project.settings
 # Порт, который слушает Django
 EXPOSE 8000
 
-############################################################
-# Команда по умолчанию
-#
-# Для разработки: runserver на 0.0.0.0:8000
-# В продакшене лучше использовать gunicorn/uwsgi.
-############################################################
-
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-
-

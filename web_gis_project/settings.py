@@ -83,6 +83,22 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "web_gis_project.urls"
 
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [BASE_DIR / 'templates'],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
 WSGI_APPLICATION = "web_gis_project.wsgi.application"
 
 
@@ -173,7 +189,6 @@ REST_FRAMEWORK = {
 
 CORS_ALLOW_ALL_ORIGINS = True  # Для разработки. В продакшене лучше ограничить домены.
 
-
 # -----------------------------
 # CELERY
 # -----------------------------
@@ -184,7 +199,6 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
-
 
 # -----------------------------
 # GDAL / GEOS
@@ -200,5 +214,3 @@ GEOS_LIBRARY_PATH = os.environ.get("GEOS_LIBRARY_PATH", "/usr/lib/libgeos_c.so")
 # -----------------------------
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-

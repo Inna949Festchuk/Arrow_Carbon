@@ -66,7 +66,9 @@ services:
     ports:
       - "6379:6379"
 
-  celery_worker:
+  # Без Beat - задачи выполняются только по требованию (по запросу пользователя/API)
+  # С Beat - задачи выполняются автоматически по расписанию + по требованию
+  celery_worker: # КТО выполняет (исполнитель задач)
     build: .
     container_name: arrow_carbon_celery_worker
     command: >
@@ -90,7 +92,7 @@ services:
       - db
       - redis
 
-  celery_beat:
+  celery_beat: # КОГДА выполнять (планировщик задач)
     build: .
     container_name: arrow_carbon_celery_beat
     command: >
