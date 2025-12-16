@@ -94,3 +94,33 @@ docker compose logs -f web
 ```bash
 docker compose exec web python manage.py migrate
 ```
+
+## 6. Устранение неисправностей
+
+
+# 1. Проверьте наличие models.py
+docker-compose exec web ls -la pdre_calculation/models.py
+
+# 2. Создайте миграции
+docker-compose exec web python manage.py makemigrations pdre_calculation
+
+# 3. Примените миграции  
+docker-compose exec web python manage.py migrate
+
+# 4. Проверьте
+docker-compose exec web python manage.py showmigrations pdre_calculation
+
+# Должно показать:
+# pdre_calculation
+# [X] 0001_initial
+
+-------
+
+# Установить расширениее БД postgis_raster
+
+# Подключитесь к контейнеру базы данных
+docker-compose exec db psql -U pdre_user -d pdre_db
+
+# В psql выполните:
+CREATE EXTENSION IF NOT EXISTS postgis_raster;
+\q

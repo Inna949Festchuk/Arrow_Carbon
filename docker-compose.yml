@@ -19,6 +19,7 @@ services:
     container_name: arrow_carbon_web
     command: >
       sh -c "
+        python manage.py makemigrations &&
         python manage.py migrate &&
         python manage.py runserver 0.0.0.0:8000
       "
@@ -56,6 +57,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pdre_password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      # активируем расширение PostGIS raster для поддержки растровых данных
+      - ./init-postgis-raster.sql:/docker-entrypoint-initdb.d/20_postgis_raster.sql
     ports:
       - "5432:5432"
 
