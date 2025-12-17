@@ -99,14 +99,23 @@ class ProtectedArea(gis_models.Model):
         if self.boundary:
             from django.contrib.gis.geos import GEOSGeometry
 
-            # Копируем геометрию и переводим в метрическую проекцию (Web Mercator)
-            geom = GEOSGeometry(self.boundary.wkt)
+            # Работаем с оригинальной геометрией, а не копией
+            geom = self.boundary
+            
+            # Если SRID не установлен, устанавливаем по умолчанию
+            if geom.srid is None:
+                geom.srid = 4326  # WGS84
+            
+            # Трансформируем в метрическую проекцию
             geom.transform(3857)
             # Площадь в квадратных метрах -> переводим в гектары
             self.area_ha = geom.area / 10_000.0
+            
+            # Возвращаем обратно в исходную проекцию (если нужно)
+            geom.transform(4326)  # или другой исходный SRID
 
         super().save(*args, **kwargs)
-
+        
     def __str__(self) -> str:
         return f"{self.name} ({self.get_area_type_display()})"
 
